@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#1B4332" />
+<title>PlantCare AI — ذكي في رعاية نباتك</title>
+<meta name="description" content="نموذج أولي لنظام مراقبة ري النباتات الذكي بالاعتماد على حساسات ESP32 محاكاة" />
+<meta name="author" content="Sama Mostafa" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌱</text></svg>" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div id="app" class="app">
+
+  <!-- Sidebar (desktop) -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <span class="brand-icon">🌿</span>
+      <div class="brand-text">
+        <p class="brand-name" data-t="appName">PlantCare AI</p>
+        <p class="brand-tag" data-t="tagline">ذكي في رعاية نباتك</p>
+      </div>
+    </div>
+    <nav class="sidebar-nav" id="sidebarNav"></nav>
+    <div class="sidebar-footer">
+      <p class="sidebar-badge" data-t="common.prototypeBadge">نموذج أولي</p>
+      <p class="sidebar-credit" data-t="credit">فكرة وتصميم: سما مصطفى</p>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <div class="main">
+    <div class="page-wrap">
+
+      <!-- HOME -->
+      <section class="page" id="page-home" data-page="home">
+        <header class="home-header">
+          <div class="home-header-row">
+            <span class="brand-icon mobile-only">🌿</span>
+            <div>
+              <h1 class="home-title" data-t="appName">PlantCare AI</h1>
+              <p class="home-tagline" data-t="tagline">ذكي في رعاية نباتك</p>
+              <p class="home-credit" data-t="credit">فكرة وتصميم: سما مصطفى</p>
+            </div>
+          </div>
+        </header>
+
+        <div class="home-grid">
+          <div class="home-col-left">
+            <!-- Status hero -->
+            <div class="hero" id="statusHero">
+              <div class="hero-sprout">🌿</div>
+              <div class="hero-top">
+                <span class="hero-drop">💧</span>
+                <span><span data-t="home.lastReading">آخر قراءة</span>: <span id="lastReadingLabel">الآن</span></span>
+              </div>
+              <p class="hero-status" id="heroStatusText"></p>
+              <div class="hero-avg-row">
+                <span class="hero-avg-num" id="heroAverage">0.0</span>
+                <span class="hero-avg-unit" data-t="common.percent">%</span>
+              </div>
+              <p class="hero-avg-label" data-t="home.averageMoisture">متوسط رطوبة التربة</p>
+            </div>
+
+            <!-- Alert banner -->
+            <div class="alert-banner hidden" id="alertBanner">
+              <div class="alert-row">
+                <span class="alert-icon">⚠️</span>
+                <div>
+                  <p class="alert-title" data-t="home.alertTitle">تنبيه</p>
+                  <p class="alert-line1" data-t="home.alertLine1">مستوى رطوبة التربة منخفض</p>
+                  <p class="alert-line2" data-t="home.alertLine2">النبات يحتاج إلى الماء</p>
+                </div>
+              </div>
+              <button class="btn btn-primary btn-block" id="readBtnAlert">
+                <span data-t="home.readSensorsBtn">قراءة الحساسات</span>
+              </button>
+            </div>
+
+            <!-- Moisture bar -->
+            <div class="card moisture-card">
+              <div class="moisture-row-top">
+                <span class="moisture-label" id="moistureLabel"></span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill" id="moistureFill"></div>
+              </div>
+              <div class="moisture-status" id="moistureStatus"></div>
+            </div>
+
+            <!-- Read sensors button (shown when water not needed) -->
+            <button class="btn btn-primary btn-block hidden" id="readBtnMain">
+              <span data-t="home.readSensorsBtn">قراءة الحساسات</span>
+            </button>
+
+            <!-- Water estimate card -->
+            <div class="card water-card hidden" id="waterCard">
+              <div class="water-head">
+                <span class="water-icon">💧</span>
+                <div>
+                  <p class="water-title" id="waterTitleLine"></p>
+                  <p class="water-sub" data-t="water.title">الكمية التقديرية للري</p>
+                </div>
+              </div>
+
+              <div class="water-rows">
+                <div class="row-kv"><span data-t="water.currentMoisture">رطوبة التربة الحالية</span><strong id="waterCurrent">—</strong></div>
+                <div class="row-kv"><span data-t="water.targetMoisture">الرطوبة المستهدفة</span><strong id="waterTarget">—</strong></div>
+                <div class="row-kv"><span data-t="water.temperature">درجة الحرارة</span><strong id="waterTemp">—</strong></div>
+              </div>
+
+              <div class="water-selects">
+                <label class="select-field">
+                  <span data-t="water.plantType">نوع النبات</span>
+                  <select id="plantTypeSelect"></select>
+                </label>
+                <label class="select-field">
+                  <span data-t="water.potSize">حجم الأصيص</span>
+                  <select id="potSizeSelect"></select>
+                </label>
+              </div>
+
+              <div class="water-result hidden" id="waterResult"></div>
+              <p class="water-hint" id="waterHint" data-t="water.hint">اضغط على الزر لحساب الكمية التقديرية للري</p>
+
+              <button class="btn btn-sky btn-block" id="calcWaterBtn" data-t="water.calcBtn">💧 احسب كمية الري</button>
+            </div>
+
+            <!-- Water estimate card not-needed state -->
+          </div>
+
+          <div class="home-col-right">
+            <h2 class="section-label" data-t="home.quickOverview">نظرة سريعة على الحساسات</h2>
+            <div class="overview-grid" id="overviewGrid"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SENSORS -->
+      <section class="page hidden" id="page-sensors" data-page="sensors">
+        <header class="page-header">
+          <div>
+            <h1 class="page-title" data-t="sensors.title">تفاصيل حساسات التربة</h1>
+            <p class="page-subtitle" data-t="sensors.subtitle">قراءة مباشرة من أربعة حساسات رطوبة موزّعة في التربة</p>
+          </div>
+          <span class="badge" data-t="common.prototypeBadge">نموذج أولي</span>
+        </header>
+        <div class="sensors-grid" id="sensorsGrid"></div>
+        <button class="btn btn-primary read-btn-wide" id="readBtnSensors">
+          <span data-t="home.readSensorsBtn">قراءة الحساسات</span>
+        </button>
+      </section>
+
+      <!-- ENVIRONMENT -->
+      <section class="page hidden" id="page-environment" data-page="environment">
+        <header class="page-header">
+          <div>
+            <h1 class="page-title" data-t="environment.title">الظروف البيئية</h1>
+            <p class="page-subtitle" data-t="environment.subtitle">قراءات حساس الحرارة والرطوبة والضغط الجوي</p>
+          </div>
+          <span class="badge" data-t="common.prototypeBadge">نموذج أولي</span>
+        </header>
+        <div class="env-grid" id="envGrid"></div>
+      </section>
+
+      <!-- HISTORY -->
+      <section class="page hidden" id="page-history" data-page="history">
+        <header class="page-header">
+          <div>
+            <h1 class="page-title" data-t="history.title">سجل رطوبة التربة</h1>
+            <p class="page-subtitle" data-t="history.subtitle">آخر القراءات المسجّلة لمتوسط رطوبة التربة</p>
+          </div>
+          <span class="badge" data-t="common.prototypeBadge">نموذج أولي</span>
+        </header>
+        <div class="history-grid">
+          <div class="card chart-card">
+            <div class="chart-bars" id="chartBars"></div>
+            <div class="chart-trend" id="chartTrend"></div>
+          </div>
+          <div class="card device-card">
+            <div class="device-top">
+              <h3 class="device-title" data-t="device.title">حالة الجهاز</h3>
+              <span class="device-status"><span class="dot"></span><span data-t="device.connected">متصل</span></span>
+            </div>
+            <div class="device-stats">
+              <div class="device-stat"><span class="device-stat-icon">🧠</span><span data-t="device.model">ESP32</span></div>
+              <div class="device-stat"><span class="device-stat-icon">📶</span><span>6/6</span></div>
+              <div class="device-stat"><span class="device-stat-icon">🖥️</span><span data-t="device.enabled">مفعّلة</span></div>
+            </div>
+            <p class="device-last" id="deviceLastReading"></p>
+            <p class="device-note" data-t="device.simulatedNote">هذه البيانات محاكاة بالكامل لأغراض العرض التجريبي</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section class="page hidden" id="page-settings" data-page="settings">
+        <header class="page-header">
+          <div><h1 class="page-title" data-t="settings.title">الإعدادات</h1></div>
+        </header>
+
+        <div class="settings-grid">
+          <div class="card settings-card span-2">
+            <label class="field-label" data-t="settings.plantName">اسم النبات</label>
+            <input type="text" id="plantNameInput" class="text-input" />
+          </div>
+
+          <div class="card settings-card span-2">
+            <label class="field-label" data-t="settings.threshold">الحد الأدنى لرطوبة التربة</label>
+            <p class="field-hint" data-t="settings.thresholdHint">عند انخفاض المتوسط عن هذه النسبة يظهر تنبيه الري</p>
+            <div class="range-row">
+              <input type="range" min="10" max="60" step="1" id="thresholdRange" class="range-input" />
+              <span class="range-value" id="thresholdValue">30%</span>
+            </div>
+          </div>
+
+          <div class="card settings-card span-2">
+            <label class="field-label" data-t="settings.target">الرطوبة المستهدفة بعد الري</label>
+            <p class="field-hint" data-t="settings.targetHint">تُستخدم في حساب الكمية التقديرية للري</p>
+            <div class="range-row">
+              <input type="range" min="30" max="60" step="1" id="targetRange" class="range-input" />
+              <span class="range-value" id="targetValue">35%</span>
+            </div>
+          </div>
+
+          <div class="card settings-card">
+            <div class="toggle-row">
+              <div>
+                <p class="field-label" data-t="settings.notifications">الإشعارات</p>
+                <p class="field-hint" data-t="settings.notificationsHint">تنبيه عند انخفاض رطوبة التربة</p>
+              </div>
+              <button class="toggle" id="notifToggle" role="switch" aria-checked="true"><span class="toggle-knob"></span></button>
+            </div>
+          </div>
+
+          <div class="card settings-card">
+            <div class="toggle-row">
+              <div>
+                <p class="field-label" data-t="settings.darkMode">الوضع الداكن</p>
+                <p class="field-hint" data-t="settings.darkModeHint">مظهر مريح للعين في الإضاءة المنخفضة</p>
+              </div>
+              <button class="toggle" id="darkToggle" role="switch" aria-checked="false"><span class="toggle-knob"></span></button>
+            </div>
+          </div>
+
+          <div class="card settings-card span-2">
+            <label class="field-label" data-t="settings.language">اللغة</label>
+            <div class="lang-row">
+              <button class="lang-btn" id="langArBtn" data-t="settings.arabic">العربية</button>
+              <button class="lang-btn" id="langEnBtn" data-t="settings.english">English</button>
+            </div>
+          </div>
+
+          <button class="btn btn-outline-danger span-2" id="resetBtn">
+            <span data-t="settings.reset">استعادة الإعدادات الافتراضية</span>
+          </button>
+
+          <div class="card settings-card span-2 about-card">
+            <span class="about-icon">✨</span>
+            <div>
+              <p class="field-label" data-t="appName">PlantCare AI</p>
+              <p class="field-hint" data-t="credit">فكرة وتصميم: سما مصطفى</p>
+            </div>
+          </div>
+
+          <p class="prototype-note span-2" data-t="settings.prototypeNote">نموذج أولي للواجهة فقط — لا يوجد اتصال حقيقي بأي جهاز</p>
+        </div>
+
+        <div class="saved-toast" id="savedToast"><span data-t="settings.saved">تم الحفظ</span></div>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- Bottom nav (mobile) -->
+  <nav class="bottom-nav" id="bottomNav"></nav>
+</div>
+
+<script src="js/i18n.js"></script>
+<script src="js/water.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
